@@ -20,7 +20,7 @@ var (
 	verbose   bool
 
 	rootCmd = &cobra.Command{
-		Use:   "gochange [paths] -- [command]",
+		Use:   "gochange [flags] [paths] -- [command]",
 		Short: "Runs a command when file changes are detected",
 		Run:   execute,
 	}
