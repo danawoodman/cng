@@ -4,7 +4,7 @@ dev:
 	@gochange -i -k '**/*.go' -- go run ./cmd/gochange $(ARGS)
 
 build:
-	@go build -o bin/gochange ./cmd/gochange
+	@go build -ldflags="-s -w" -o bin/gochange ./cmd/gochange
 	@echo "gochange built to bin/gochange"
 
 install:
