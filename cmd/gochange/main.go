@@ -36,7 +36,7 @@ func init() {
 	// rootCmd.PersistentFlags().BoolVar(&noExclude, "no-exclude", false, "Disable default exclusion")
 	rootCmd.PersistentFlags().BoolVarP(&kill, "kill", "k", false, "Kill running processes between changes")
 	// rootCmd.PersistentFlags().IntVarP(&jobs, "jobs", "j", 1, "Set max concurrent processes")
-	rootCmd.PersistentFlags().IntVarP(&delay, "delay", "d", 0, "Delay between process changes")
+	rootCmd.PersistentFlags().IntVarP(&delay, "delay", "d", 0, "Delay between process changes in milliseconds")
 	// rootCmd.PersistentFlags().IntVar(&await, "await-write-finish", 2000, "Hold events until the size doesn't change")
 	// rootCmd.PersistentFlags().IntVarP(&poll, "poll", "p", 0, "Use polling for change detection")
 	// rootCmd.PersistentFlags().StringVarP(&outpipe, "outpipe", "o", "", "Shell command to execute on every change")
