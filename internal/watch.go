@@ -3,6 +3,7 @@ package internal
 import (
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
@@ -70,6 +71,19 @@ func (w *Watcher) Start() {
 		w.runCmd()
 	}
 
+	// Watch for a SIGINT signal and call .kill on the current command
+	// process if we receive one:
+	go func() {
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, os.Interrupt)
+		<-sig
+		w.log("Received SIGINT, exiting...")
+		if w.cmd != nil {
+			w.kill()
+		}
+		os.Exit(0)
+	}()
+
 	for {
 		select {
 		case event := <-watcher.Events:
@@ -116,12 +130,13 @@ func (w *Watcher) runCmd() {
 	w.cmd = cmd
 }
 
+// kill kills the current command process.
+// It sends a SIGINT signal to the process group of cmd.
+// We cannot simply call cmd.Process.Kill() because it will not kill
+// the child processes of cmd which, in the case of something like a
+// web server, would mean that we can't re-bind to the given port.
+// We then wait for the task to exit cleanly before continuing.
 func (w *Watcher) kill() {
-	// Send SIGINT to the process group of cmd.
-	// We cannot simply call cmd.Process.Kill() because it will not kill
-	// the child processes of cmd which, in the case of something like a
-	// web server, would mean that we can't re-bind to the given port.
-	// We then wait for the task to exit cleanly before continuing.
 	pgid, err := syscall.Getpgid(w.cmd.Process.Pid)
 	if err == nil {
 		syscall.Kill(-pgid, syscall.SIGINT)
@@ -130,6 +145,8 @@ func (w *Watcher) kill() {
 	w.cmd.Wait()
 }
 
+// shouldExclude returns true if the given path should be excluded from
+// triggering a command run based on the `-e, --exclude` flag.
 func (w *Watcher) shouldExclude(path string) bool {
 	skip := false
 
@@ -144,10 +161,13 @@ func (w *Watcher) shouldExclude(path string) bool {
 	return skip
 }
 
+// exit logs a fatal message and exits the program because of
+// some invalid condition.
 func (w *Watcher) exit(msg string, args ...interface{}) {
 	logger.Fatal(msg, args...)
 }
 
+// log logs a message if verbose mode is enabled.
 func (w *Watcher) log(msg string, args ...interface{}) {
 	if w.config.Verbose {
 		logger.Info(msg, args...)
