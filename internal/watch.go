@@ -17,22 +17,6 @@ var logger = log.NewWithOptions(os.Stderr, log.Options{
 	Prefix: "gochange",
 })
 
-type WatcherConfig struct {
-	Paths   []string
-	Command []string
-	Initial bool
-	Verbose bool
-	Kill    bool
-	Exclude []string
-	Delay   int
-}
-
-type Watcher struct {
-	config       *WatcherConfig
-	cmd          *exec.Cmd
-	lastCmdStart time.Time
-}
-
 func NewWatcher(config *WatcherConfig) *Watcher {
 	if config.Verbose {
 		logger.Info("Starting watcher with config:", "config", config)
@@ -151,7 +135,7 @@ func (w *Watcher) shouldExclude(path string) bool {
 	skip := false
 
 	for _, excl := range w.config.Exclude {
-		if matched, _ := filepath.Match(excl, path); matched {
+		if matched, _ := filepath.Match(excl, "./"+path); matched {
 			w.log("File in exclude path, skipping", "exclude", excl)
 			skip = true
 			break

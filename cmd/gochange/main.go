@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/danawoodman/gochange/internal"
 	"github.com/spf13/cobra"
 )
@@ -33,15 +35,16 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&add, "add", "a", false, "Execute command for initially added paths")
 	rootCmd.PersistentFlags().BoolVarP(&initial, "initial", "i", false, "Execute command once on load without any event")
 	rootCmd.PersistentFlags().StringSliceVarP(&exclude, "exclude", "e", []string{}, "Exclude matching paths")
-	// rootCmd.PersistentFlags().BoolVar(&noExclude, "no-exclude", false, "Disable default exclusion")
 	rootCmd.PersistentFlags().BoolVarP(&kill, "kill", "k", false, "Kill running processes between changes")
-	// rootCmd.PersistentFlags().IntVarP(&jobs, "jobs", "j", 1, "Set max concurrent processes")
 	rootCmd.PersistentFlags().IntVarP(&delay, "delay", "d", 0, "Delay between process changes in milliseconds")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
+	// TODO: implement more onchange features:
+	// rootCmd.PersistentFlags().BoolVar(&noExclude, "no-exclude", false, "Disable default exclusion")
+	// rootCmd.PersistentFlags().IntVarP(&jobs, "jobs", "j", 1, "Set max concurrent processes")
 	// rootCmd.PersistentFlags().IntVar(&await, "await-write-finish", 2000, "Hold events until the size doesn't change")
 	// rootCmd.PersistentFlags().IntVarP(&poll, "poll", "p", 0, "Use polling for change detection")
 	// rootCmd.PersistentFlags().StringVarP(&outpipe, "outpipe", "o", "", "Shell command to execute on every change")
 	// rootCmd.PersistentFlags().StringVarP(&filter, "filter", "f", "", "Filter events to listen")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
 }
 
 func main() {
@@ -50,13 +53,20 @@ func main() {
 
 func execute(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
+		fmt.Println("No arguments provided\n")
 		cmd.Help()
 		return
 	}
 
-	// TODO: check length of args
 	cmdIndex := indexOf("--", args)
 	cmdToRun := args[cmdIndex+1:]
+
+	if len(cmdToRun) == 0 {
+		fmt.Println("ERROR: No command specified\n")
+		cmd.Help()
+		return
+	}
+
 	watchedPaths := args[:cmdIndex]
 
 	internal.NewWatcher(&internal.WatcherConfig{

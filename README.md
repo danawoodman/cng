@@ -16,14 +16,17 @@ go install github.com/danawoodman/gochange
 # Run `go run ./cmd/myapp` when any .go or .html files change.
 # `-i` runs the command once on load without any event
 # `-k`` kills running processes between changes
-# The command you want to run is followed by the `--` separator
+# The command you want to run is followed by the `--` separator:
 gochange -i -k '**/*.go' 'templates/**/*.html' -- go run ./cmd/myapp
 
-# Run tests when your source or tests change
+# Run tests when your source or tests change:
 gochange 'app/**/*.tsx?' '**/*.test.ts' -- npm test
 
-# Wait 500ms before running the command
+# Wait 500ms before running the command:
 gochange -d 500 '*.md' -- echo "changed!"
+
+# Ignore/exclude some paths:
+gochange -e 'path/to/exclude/*.go' '**/*.go' -- echo "changed!"
 ```
 
 ## Features
