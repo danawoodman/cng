@@ -1,4 +1,8 @@
-# gochange
+# 🔭 gochange
+
+<div style="align: center">
+	<img src="https://p198.p4.n0.cdn.getcloudapp.com/items/X6uXY0mB/3d7fe08d-4169-4837-afe5-765d8f6e73fd.png?v=b86f40978b79aaaec626ae521db89d58" alt="gochange logo" />
+</div>
 
 > Run commands on file change using glob patterns, heavily inspired by the excellent [onchange][onchange], but written in Go.
 
