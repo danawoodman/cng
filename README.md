@@ -77,7 +77,7 @@ I loved onchange but the combo of requiring Node, not being maintained anymore, 
 
 PRs welcome!
 
-Code lives in `internal` and the CLI is in `cmd/gochange`, using Cobra to parse command line arguments.
+- We use Cobra to parse command line arguments
 
 ```shell
 # Build the CLI
