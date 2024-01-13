@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/danawoodman/gochange/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -69,7 +68,7 @@ func execute(cmd *cobra.Command, args []string) {
 
 	watchedPaths := args[:cmdIndex]
 
-	internal.NewWatcher(&internal.WatcherConfig{
+	NewWatcher(&WatcherConfig{
 		Command: cmdToRun,
 		Paths:   watchedPaths,
 		Verbose: verbose,
