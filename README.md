@@ -24,7 +24,7 @@ go install github.com/danawoodman/cng
 cng -i -k '**/*.go' 'templates/**/*.html' -- go run ./cmd/myapp
 
 # Run tests when your source or tests change:
-cng 'app/**/*.tsx?' '**/*.test.ts' -- npm test
+cng 'app/**/*.{ts,tsx}' '**/*.test.ts' -- npm test
 
 # Wait 500ms before running the command:
 cng -d 500 '*.md' -- echo "changed!"

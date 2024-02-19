@@ -2,7 +2,6 @@ package test
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -49,6 +48,16 @@ func TestCng(t *testing.T) {
 			},
 			stdout: "hello\n",
 		},
+		{
+			name:    "ignores default excluded dirs",
+			pattern: "*.txt",
+			exclude: "*.md",
+			steps: func(write func(string)) {
+				write(".git/foo.txt")
+				write("node_modules/foo.txt")
+			},
+			stdout: "",
+		},
 		// todo: should report helpful error if missing pattern
 		// {
 		// 	name: "adds renamed files",
@@ -65,12 +74,18 @@ func TestCng(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
+			// t.Parallel()
 			if test.skip {
 				t.Skip()
 			}
 
 			dir := t.TempDir()
+			// fmt.Println("TEMP DIR:", dir)
+			err := os.Chdir(dir)
+			assert.NoError(t, err)
+			// wd, err := os.Getwd()
+			// assert.NoError(t, err)
+			// fmt.Println("WORK DIR:", wd)
 
 			var stdoutBuf, stderrBuf bytes.Buffer
 			conf := conf{
@@ -84,12 +99,12 @@ func TestCng(t *testing.T) {
 			}
 			// t.Logf("CONF: %+v", conf)
 			cmd := command(t, &stdoutBuf, &stderrBuf, conf)
-			err := cmd.Start()
+			err = cmd.Start()
 			assert.NoError(t, err)
 
 			// wait for the process to start
 			// anything less than about 100ms and the process won't have time to start
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(300 * time.Millisecond)
 
 			if test.steps != nil {
 				test.steps(func(path string) {
@@ -97,7 +112,14 @@ func TestCng(t *testing.T) {
 				})
 			}
 
-			time.Sleep(100 * time.Millisecond)
+			// List all files in dir:
+			// files, err := os.ReadDir(dir)
+			// assert.NoError(t, err)
+			// for _, file := range files {
+			// 	fmt.Println("FILE:", file.Name())
+			// }
+
+			time.Sleep(300 * time.Millisecond)
 
 			// Send SIGINT to the process
 			err = cmd.Process.Signal(os.Interrupt)
@@ -135,13 +157,20 @@ func write(t *testing.T, dir, path, content string, waitMs int) /**os.File*/ {
 	t.Helper()
 	var f *os.File
 
+	fullPath := filepath.Join(dir, path)
+	fullDir := filepath.Dir(fullPath)
+	fileName := filepath.Base(fullPath)
+
 	// Create the file if it doesn't exist yet:
-	_, err := os.Stat(filepath.Join(dir, path))
+	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
-		f, err = os.CreateTemp(dir, path)
+		// recursively create the file's parent directories:
+		err = os.MkdirAll(fullDir, 0o755)
+		assert.NoError(t, err)
+		f, err = os.CreateTemp(fullDir, fileName)
 		assert.NoError(t, err)
 	} else {
-		f, err = os.OpenFile(filepath.Join(dir, path), os.O_RDWR, 0o644)
+		f, err = os.OpenFile(fullPath, os.O_RDWR, 0o644)
 		assert.NoError(t, err)
 	}
 
@@ -170,12 +199,12 @@ func command(t *testing.T, stdout, stderr io.Writer, conf conf) *exec.Cmd {
 		parts = append(parts, "-k")
 	}
 	if conf.exclude != "" {
-		parts = append(parts, "-e", fmt.Sprintf("%s/%s", conf.dir, conf.exclude))
+		parts = append(parts, "-e", conf.exclude)
 	}
-	parts = append(parts, fmt.Sprintf("%s/%s", conf.dir, conf.pattern))
+	parts = append(parts, conf.pattern)
 	parts = append(parts, "--", "echo", "hello")
 	cmd := exec.Command("cng", parts...)
-	t.Log("CMD:", cmd.String())
+	// t.Log("CMD:", cmd.String())
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	return cmd

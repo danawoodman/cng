@@ -71,14 +71,14 @@ func execute(cmd *cobra.Command, args []string) {
 
 	watchedPaths := args[:cmdIndex]
 
-	internal.NewWatcher(&internal.WatcherConfig{
-		Command: cmdToRun,
-		Paths:   watchedPaths,
-		Verbose: verbose,
-		Initial: initial,
-		Kill:    kill,
-		Exclude: exclude,
-		Delay:   delay,
+	internal.NewWatcher(internal.WatcherConfig{
+		Command:      cmdToRun,
+		ExcludePaths: watchedPaths,
+		Verbose:      verbose,
+		Initial:      initial,
+		Kill:         kill,
+		Exclude:      exclude,
+		Delay:        delay,
 	}).Start()
 }
 

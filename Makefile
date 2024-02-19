@@ -1,25 +1,47 @@
-.PHONY: dev build install test watch-test
+#------------------------------------------------------------------------------
+# TESTS
+#------------------------------------------------------------------------------
 
-dev:
-	@cng -ik '**/*.go' -- make build
-
-# @cng -ik '**/*.go' -- go run ./cmd/cng $(ARGS)
-
+.PHONY: test
 test:
-	@go test -v ./...
+	@make -j test-unit test-e2e
 
+.PHONY: test-e2e
+test-e2e:
+	@go test -v ./test/...
+
+.PHONY: test-unit
+test-unit:
+	@go test -v ./internal/...
+
+.PHONY: watch-test
 watch-test:
-	@cng -ik '**/*.go' -- make install test
+	@make -j watch-unit-test watch-e2e-test
 
+.PHONY: watch-unit-test
+watch-unit-test:
+	@cng -ik -e 'test' '**/*.go' -- make test-unit
+
+.PHONY: watch-e2e-test
+watch-e2e-test:
+	@cng -ik '**/*.go' -- make install test-e2e
+
+#------------------------------------------------------------------------------
+# BUILDING
+#------------------------------------------------------------------------------
+
+.PHONY: build
 build:
 	@CGO_ENABLED=0 go build -a -gcflags=all="-l -B" -ldflags="-s -w" -o bin/cng ./cmd/cng
 	@echo "🎉 cng built to bin/cng"
 
+.PHONY: install
 install:
 	@go install ./cmd/cng
 	@echo "🎉 cng installed to: $(shell which cng)"
 
+.PHONY: watch-install
 watch-install:
 	@cng -ik '**/*.go' -- make install
 
-.DEFAULT_GOAL := dev
+.DEFAULT_GOAL := watch-test

@@ -1,17 +1,16 @@
 package internal
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"strings"
 	"syscall"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/charmbracelet/log"
+	"github.com/danawoodman/cng/internal/domain"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -21,16 +20,53 @@ var logger = log.NewWithOptions(os.Stderr, log.Options{
 
 // todo: inject logging using WithLogger
 
-func NewWatcher(config *WatcherConfig) *Watcher {
+type WatcherConfig struct {
+	ExcludePaths []string
+	Command      []string
+	Initial      bool
+	Verbose      bool
+	Kill         bool
+	Exclude      []string
+	Delay        int
+}
+
+type Watcher struct {
+	config       WatcherConfig
+	cmd          *exec.Cmd
+	lastCmdStart time.Time
+	log          func(msg string, args ...interface{})
+	skipper      domain.Skipper
+	workDir      string
+}
+
+func NewWatcher(config WatcherConfig) Watcher {
 	if config.Verbose {
 		logger.Info("Starting watcher with config:", "config", config)
 	}
-	return &Watcher{config: config}
+
+	workDir, err := os.Getwd()
+	if err != nil {
+		panic("Could not get working directory: " + err.Error())
+	}
+
+	return Watcher{
+		config: config,
+		// todo: make this injectable
+		workDir: workDir,
+		skipper: domain.NewSkipper(workDir, config.Exclude),
+		log: func(msg string, args ...interface{}) {
+			if config.Verbose {
+				logger.Info(msg, args...)
+			}
+		},
+	}
 }
 
-func (w *Watcher) Start() {
+func (w Watcher) Start() {
+	// fmt.Println("WORKING DIRECTORY:", wd)
+
 	w.log("Command to run:", "cmd", w.config.Command)
-	w.log("Watched paths:", "paths", w.config.Paths)
+	w.log("Watched paths:", "paths", w.config.ExcludePaths)
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -38,40 +74,25 @@ func (w *Watcher) Start() {
 	}
 	defer watcher.Close()
 
-	w.log("Adding watched paths:", "paths", w.config.Paths)
-	for _, pattern := range w.config.Paths {
-		// todo: validate patterns
-		if strings.HasPrefix(pattern, ".") || strings.HasPrefix(pattern, "*") {
-			dir, err := os.Getwd()
-			if err != nil {
-				log.Fatal(err)
-			}
-			w.log("Expanding path to current dir", "path", pattern, "dir", dir)
-			w.log("Adding current dir to watcher", "dir", dir)
-			if err := watcher.Add(dir); err != nil {
-				w.exit("Could not watch directory:", "dir", dir, " error:", err)
-			}
-			pattern = filepath.Join(dir, pattern)
-		} else {
-			// if path starts with . or *, expand to current dir:
-			// todo: this is really dumb...
-			dir := filepath.Dir(pattern)
-			if dir != "" {
-				w.log("Adding dir to watcher", "dir", dir)
-				if err := watcher.Add(dir); err != nil {
-					w.exit("Could not watch dir", dir, " error:", err)
-				}
-			}
+	w.log("Adding watched paths:", "paths", w.config.ExcludePaths)
+	for _, pattern := range w.config.ExcludePaths {
+		expandedPath := filepath.Join(w.workDir, pattern)
+		// fmt.Println("EXPANDED PATH:", expandedPath)
+
+		rootDir, _ := doublestar.SplitPattern(expandedPath)
+		// fmt.Println("ROOT DIR:", rootDir)
+
+		if err := watcher.Add(rootDir); err != nil {
+			w.exit("Could not watch root directory:", "dir", rootDir, " error:", err)
 		}
 
-		matches, err := doublestar.FilepathGlob(pattern)
+		matches, err := doublestar.FilepathGlob(expandedPath)
 		if err != nil {
 			w.exit("Could not watch glob pattern", pattern, " error: ", err)
 		}
 		w.log("Glob matches", "pattern", pattern, "matches", matches)
 
 		for _, path := range matches {
-
 			w.log("Watching", "path", path)
 
 			if err := watcher.Add(path); err != nil {
@@ -112,7 +133,7 @@ func (w *Watcher) Start() {
 			case event := <-watcher.Events:
 				w.log("Detected fsnotify event", "op", event.Op, "name", event.Name)
 
-				if w.shouldExclude(event.Name) {
+				if w.skipper.ShouldExclude(event.Name) {
 					w.log("File in exclude path, skipping", "path", event.Name)
 					continue
 				}
@@ -128,7 +149,10 @@ func (w *Watcher) Start() {
 					continue
 				}
 
-				if event.Op&fsnotify.Create == fsnotify.Create {
+				if event.Op&fsnotify.Create == fsnotify.Create { // || event.Op&fsnotify.Remove == fsnotify.Remove {
+					// Attempt to remove in case it's deleted
+					// watcher.Remove(event.Name)
+
 					// Check if the created item is a directory; if so, add it and its contents to the watcher
 					w.log("File created, adding to watcher", "path", event.Name)
 					fileInfo, err := os.Stat(event.Name)
@@ -164,7 +188,7 @@ func (w *Watcher) Start() {
 	<-done
 }
 
-func (w *Watcher) runCmd() {
+func (w Watcher) runCmd() {
 	w.log("Running command...")
 	cmd := exec.Command(w.config.Command[0], w.config.Command[1:]...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
@@ -187,7 +211,7 @@ func (w *Watcher) runCmd() {
 // the child processes of cmd which, in the case of something like a
 // web server, would mean that we can't re-bind to the given port.
 // We then wait for the task to exit cleanly before continuing.
-func (w *Watcher) kill() {
+func (w Watcher) kill() {
 	if w.cmd == nil {
 		return
 	}
@@ -199,47 +223,13 @@ func (w *Watcher) kill() {
 	w.cmd.Wait()
 }
 
-// shouldExclude returns true if the given path should be excluded from
-// triggering a command run based on the `-e, --exclude` flag.
-func (w *Watcher) shouldExclude(path string) bool {
-	// skip common things like .git and node_modules dirs
-	dir := filepath.Dir(path)
-	if dir != "" {
-		// todo: make this configurable
-		ignores := []string{".git", "node_modules"}
-		for _, ignore := range ignores {
-			if matches, _ := doublestar.Match(fmt.Sprintf("**/%s/**", ignore), path); matches {
-				return true
-			}
-		}
-	}
-
-	// check if the path matches any of the exclude patterns
-	for _, pattern := range w.config.Exclude {
-		w.log("Checking exclude pattern", "pattern", pattern, "path", path)
-		if matches, _ := doublestar.Match(pattern, path); matches {
-			w.log("File in exclude path, skipping", "exclude", pattern)
-			return true
-		}
-	}
-
-	return false
-}
-
 // exit logs a fatal message and exits the program because of
 // some invalid condition.
-func (w *Watcher) exit(msg string, args ...interface{}) {
+func (w Watcher) exit(msg string, args ...interface{}) {
 	logger.Fatal(msg, args...)
 }
 
-// log logs a message if verbose mode is enabled.
-func (w *Watcher) log(msg string, args ...interface{}) {
-	if w.config.Verbose {
-		logger.Info(msg, args...)
-	}
-}
-
-func (w *Watcher) addFiles(watcher *fsnotify.Watcher, rootPath string) {
+func (w Watcher) addFiles(watcher *fsnotify.Watcher, rootPath string) {
 	w.log("Adding files in directory to watcher", "path", rootPath)
 	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
