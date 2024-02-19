@@ -57,7 +57,7 @@ func TestCng(t *testing.T) {
 		// 	name: "flag: delay execution",
 		// },
 		// {
-		// 	name: "adds renamed filesstops watching deleted files",
+		// 	name: "stops watching deleted files",
 		// },
 		// todo: can ignore based on glob
 		// todo: ignore files in node_modules / ,git by default
