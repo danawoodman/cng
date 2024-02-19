@@ -42,7 +42,7 @@ func TestCng(t *testing.T) {
 			pattern: "*.txt",
 			exclude: "*.md",
 			steps: func(write func(string)) {
-				write("test.txt")
+				write("*.txt")
 
 				// should not be picked up by the watcher
 				write("*.md")
@@ -72,15 +72,6 @@ func TestCng(t *testing.T) {
 
 			dir := t.TempDir()
 
-			write(t, dir, "*.txt", "content", 200)
-
-			// list files in dir:
-			files, err := os.ReadDir(dir)
-			assert.NoError(t, err)
-			for _, file := range files {
-				fmt.Println("FILE:", file.Name())
-			}
-
 			var stdoutBuf, stderrBuf bytes.Buffer
 			conf := conf{
 				dir:     dir,
@@ -93,7 +84,7 @@ func TestCng(t *testing.T) {
 			}
 			// t.Logf("CONF: %+v", conf)
 			cmd := command(t, &stdoutBuf, &stderrBuf, conf)
-			err = cmd.Start()
+			err := cmd.Start()
 			assert.NoError(t, err)
 
 			// wait for the process to start
