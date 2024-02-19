@@ -1,14 +1,18 @@
-# 🔭 gochange
+# 🔭 cng - run commands on file change
 
 > Run commands on file change using glob patterns, heavily inspired by the excellent [onchange][onchange], but written in Go.
 
 ## Install
 
-```shell
-go install github.com/danawoodman/gochange
-```
+### Binary installs
 
-**Coming soon(?):** Downloads for macOS, Linux, and Windows...
+**Coming soon(?):** Downloads for macOS, Linux, and Windows, homebrew, apt, etc...
+
+### Install with Golang
+
+```shell
+go install github.com/danawoodman/cng
+```
 
 ## Usage
 
@@ -17,23 +21,23 @@ go install github.com/danawoodman/gochange
 # `-i` runs the command once on load without any event
 # `-k`` kills running processes between changes
 # The command you want to run is followed by the `--` separator:
-gochange -i -k '**/*.go' 'templates/**/*.html' -- go run ./cmd/myapp
+cng -i -k '**/*.go' 'templates/**/*.html' -- go run ./cmd/myapp
 
 # Run tests when your source or tests change:
-gochange 'app/**/*.tsx?' '**/*.test.ts' -- npm test
+cng 'app/**/*.tsx?' '**/*.test.ts' -- npm test
 
 # Wait 500ms before running the command:
-gochange -d 500 '*.md' -- echo "changed!"
+cng -d 500 '*.md' -- echo "changed!"
 
 # Ignore/exclude some paths:
-gochange -e 'path/to/exclude/*.go' '**/*.go' -- echo "changed!"
+cng -e 'path/to/exclude/*.go' '**/*.go' -- echo "changed!"
 ```
 
 ## Features
 
 - Watch for changes using global patterns like `'*.go'` or `'src/**/*.jsx?'` (using [doublestar][doublestar], which is a much more flexible option than Go's built in glob matching). Watching is done using the very fast [fsnotify][fsnotify] library.
 - Run any command you want, like `go run ./cmd/myapp` or `npm test`
-- Optionally kill running processes between changes, useful for when running web servers for example. Importantly, gochange kills all child processes as well, so your ports get properly freed between runs (avoids errors like `"bind: address already in use"`)
+- Optionally kill running processes between changes, useful for when running web servers for example. Importantly, cng kills all child processes as well, so your ports get properly freed between runs (avoids errors like `"bind: address already in use"`)
 - Optionally run the task immediately or only run when a change is detected (default)
 - Pass in a delay to wait between re-runs. If a change is detected in the delay window, the command will not be re-run. This is useful for when you're making a lot of changes at once and don't want to run the command for each change.
 - Optionally exclude paths from triggering the command
@@ -41,17 +45,17 @@ gochange -e 'path/to/exclude/*.go' '**/*.go' -- echo "changed!"
 ## Options
 
 ```
-$ gochange
+$ cng
 Runs a command when file changes are detected
 
 Usage:
-  gochange [flags] [paths] -- [command]
+  cng [flags] [paths] -- [command]
 
 Flags:
   -a, --add               Execute command for initially added paths
   -d, --delay int         Delay between process changes in milliseconds
   -e, --exclude strings   Exclude matching paths
-  -h, --help              Help for gochange
+  -h, --help              Help for cng
   -i, --initial           Execute command once on load without any event
   -k, --kill              Kill running processes between changes
   -v, --verbose           Enable verbose logging
@@ -59,7 +63,7 @@ Flags:
 
 ## Notes and Limitations
 
-Currently, gochange only supports a subset of the onchange commands, but I'm open to adding more. Please open an issue if you have a feature request.
+Currently, cng only supports a subset of the onchange commands, but I'm open to adding more. Please open an issue if you have a feature request.
 
 This is a very new project and hasn't been tested really anywhere outside of my machine (macOS), if you run into any issues, please open an issue!
 
@@ -86,8 +90,8 @@ make build
 # Install the CLI locally
 make install
 
-# Run the CLI in watch mode using gochange :)
-# Pass the arguments to gochange using the ARGS variable.
+# Run the CLI in watch mode using cng :)
+# Pass the arguments to cng using the ARGS variable.
 # Make sure to run `make build` first!
 make dev ARGS="-i -k 'some/path/*.html' -- echo 'changed'" # or just `make`
 ```

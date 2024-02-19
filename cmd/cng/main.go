@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/danawoodman/cng/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,7 @@ var (
 	verbose   bool
 
 	rootCmd = &cobra.Command{
-		Use:   "gochange [flags] [paths] -- [command]",
+		Use:   "cng [flags] [paths] -- [command]",
 		Short: "Runs a command when file changes are detected",
 		Run:   execute,
 	}
@@ -52,7 +53,8 @@ func main() {
 
 func execute(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
-		fmt.Println("No arguments provided\n")
+		fmt.Println("No arguments provided")
+		fmt.Println("")
 		cmd.Help()
 		return
 	}
@@ -61,14 +63,15 @@ func execute(cmd *cobra.Command, args []string) {
 	cmdToRun := args[cmdIndex+1:]
 
 	if len(cmdToRun) == 0 {
-		fmt.Println("ERROR: No command specified\n")
+		fmt.Println("ERROR: No command specified")
+		fmt.Println("")
 		cmd.Help()
 		return
 	}
 
 	watchedPaths := args[:cmdIndex]
 
-	NewWatcher(&WatcherConfig{
+	internal.NewWatcher(&internal.WatcherConfig{
 		Command: cmdToRun,
 		Paths:   watchedPaths,
 		Verbose: verbose,
