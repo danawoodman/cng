@@ -40,17 +40,28 @@ func (w *Watcher) Start() {
 
 	w.log("Adding watched paths:", "paths", w.config.Paths)
 	for _, pattern := range w.config.Paths {
-		// if path starts with . or *, expand to current dir:
-		// todo: this is really dumb...
+		// todo: validate patterns
 		if strings.HasPrefix(pattern, ".") || strings.HasPrefix(pattern, "*") {
 			dir, err := os.Getwd()
 			if err != nil {
 				log.Fatal(err)
 			}
+			w.log("Expanding path to current dir", "path", pattern, "dir", dir)
+			w.log("Adding current dir to watcher", "dir", dir)
 			if err := watcher.Add(dir); err != nil {
-				w.exit("Could not watch dir", dir, " error:", err)
+				w.exit("Could not watch directory:", "dir", dir, " error:", err)
 			}
 			pattern = filepath.Join(dir, pattern)
+		} else {
+			// if path starts with . or *, expand to current dir:
+			// todo: this is really dumb...
+			dir := filepath.Dir(pattern)
+			if dir != "" {
+				w.log("Adding dir to watcher", "dir", dir)
+				if err := watcher.Add(dir); err != nil {
+					w.exit("Could not watch dir", dir, " error:", err)
+				}
+			}
 		}
 
 		matches, err := doublestar.FilepathGlob(pattern)
@@ -58,6 +69,7 @@ func (w *Watcher) Start() {
 			w.exit("Could not watch glob pattern", pattern, " error: ", err)
 		}
 		w.log("Glob matches", "pattern", pattern, "matches", matches)
+
 		for _, path := range matches {
 
 			w.log("Watching", "path", path)
