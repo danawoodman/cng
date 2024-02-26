@@ -79,19 +79,27 @@ I loved onchange but the combo of requiring Node, not being maintained anymore, 
 
 PRs welcome!
 
-- We use Cobra to parse command line arguments
+We use Cobra to parse command line arguments.
 
 ```shell
 # Build the CLI
 make build
 
+# Run tests once
+make test
+make test-unit
+make test-e2e
+
+# Run tests in watch mode
+make watch-test
+make watch-unit-test
+make watch-e2e-test
+
 # Install the CLI locally
 make install
 
-# Run the CLI in watch mode using cng :)
-# Pass the arguments to cng using the ARGS variable.
-# Make sure to run `make build` first!
-make dev ARGS="-i -k 'some/path/*.html' -- echo 'changed'" # or just `make`
+# Reinstall the CLI after making changes:
+make watch-install
 ```
 
 ## License
