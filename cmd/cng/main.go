@@ -32,12 +32,12 @@ func init() {
 	// Don't parse commands after the "--" separator
 	rootCmd.Flags().SetInterspersed(false)
 
-	rootCmd.PersistentFlags().BoolVarP(&add, "add", "a", false, "Execute command for initially added paths")
-	rootCmd.PersistentFlags().BoolVarP(&initial, "initial", "i", false, "Execute command once on load without any event")
-	rootCmd.PersistentFlags().StringSliceVarP(&exclude, "exclude", "e", []string{}, "Exclude matching paths")
-	rootCmd.PersistentFlags().BoolVarP(&kill, "kill", "k", false, "Kill running processes between changes")
-	rootCmd.PersistentFlags().IntVarP(&delay, "delay", "d", 0, "Delay between process changes in milliseconds")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
+	rootCmd.PersistentFlags().BoolVarP(&add, "add", "a", false, "execute command for initially added paths")
+	rootCmd.PersistentFlags().BoolVarP(&initial, "initial", "i", false, "execute command once on load without any event")
+	rootCmd.PersistentFlags().StringSliceVarP(&exclude, "exclude", "e", []string{}, "exclude matching paths")
+	rootCmd.PersistentFlags().BoolVarP(&kill, "kill", "k", false, "kill running processes between changes")
+	rootCmd.PersistentFlags().IntVarP(&delay, "delay", "d", 0, "delay between process changes in milliseconds")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose logging")
 	// TODO: implement more onchange features:
 	// rootCmd.PersistentFlags().BoolVar(&noExclude, "no-exclude", false, "Disable default exclusion")
 	// rootCmd.PersistentFlags().IntVarP(&jobs, "jobs", "j", 1, "Set max concurrent processes")

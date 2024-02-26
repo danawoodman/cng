@@ -112,13 +112,6 @@ func TestCng(t *testing.T) {
 				})
 			}
 
-			// List all files in dir:
-			// files, err := os.ReadDir(dir)
-			// assert.NoError(t, err)
-			// for _, file := range files {
-			// 	fmt.Println("FILE:", file.Name())
-			// }
-
 			time.Sleep(300 * time.Millisecond)
 
 			// Send SIGINT to the process

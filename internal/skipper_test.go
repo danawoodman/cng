@@ -1,14 +1,14 @@
-package domain_test
+package internal_test
 
 import (
 	"path/filepath"
 	"testing"
 
-	"github.com/danawoodman/cng/internal/domain"
+	"github.com/danawoodman/cng/internal"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test(t *testing.T) {
+func TestSkipper(t *testing.T) {
 	tests := []struct {
 		name       string
 		workDir    string
@@ -92,7 +92,7 @@ func Test(t *testing.T) {
 			for _, e := range test.exclusions {
 				exclusions = append(exclusions, filepath.Join(test.workDir, e))
 			}
-			s := domain.NewSkipper(test.workDir, exclusions)
+			s := internal.NewSkipper(test.workDir, exclusions)
 			for path, val := range test.expected {
 				p := filepath.Join(test.workDir, path)
 				assert.Equal(t, val, s.ShouldExclude(p), "exclude patterns %v should skip path '%s' but didn't", test.exclusions, path)

@@ -4,11 +4,9 @@
 
 ## Install
 
-### Binary installs
+Download a [release](https://github.com/danawoodman/cng/releases) for your platform and add it to your path.
 
-**Coming soon(?):** Downloads for macOS, Linux, and Windows, homebrew, apt, etc...
-
-### Install with Golang
+Or just install with Golang:
 
 ```shell
 go install github.com/danawoodman/cng
@@ -18,10 +16,10 @@ go install github.com/danawoodman/cng
 
 ```shell
 # Run `go run ./cmd/myapp` when any .go or .html files change.
-# `-i` runs the command once on load without any event
+# `-i` runs the command once initially, without any event
 # `-k`` kills running processes between changes
 # The command you want to run is followed by the `--` separator:
-cng -i -k '**/*.go' 'templates/**/*.html' -- go run ./cmd/myapp
+cng -ik '**/*.go' 'templates/**/*.html' -- go run ./cmd/myapp
 
 # Run tests when your source or tests change:
 cng 'app/**/*.{ts,tsx}' '**/*.test.ts' -- npm test
@@ -52,13 +50,13 @@ Usage:
   cng [flags] [paths] -- [command]
 
 Flags:
-  -a, --add               Execute command for initially added paths
-  -d, --delay int         Delay between process changes in milliseconds
-  -e, --exclude strings   Exclude matching paths
-  -h, --help              Help for cng
-  -i, --initial           Execute command once on load without any event
-  -k, --kill              Kill running processes between changes
-  -v, --verbose           Enable verbose logging
+  -a, --add               execute command for initially added paths
+  -d, --delay int         delay between process changes in milliseconds
+  -e, --exclude strings   exclude matching paths
+  -h, --help              help for cng
+  -i, --initial           execute command once on load without any event
+  -k, --kill              kill running processes between changes
+  -v, --verbose           enable verbose logging
 ```
 
 ## Notes and Limitations

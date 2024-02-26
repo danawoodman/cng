@@ -10,15 +10,13 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/charmbracelet/log"
-	"github.com/danawoodman/cng/internal/domain"
 	"github.com/fsnotify/fsnotify"
 )
 
+// todo: inject logging using WithLogger
 var logger = log.NewWithOptions(os.Stderr, log.Options{
 	Prefix: "cng",
 })
-
-// todo: inject logging using WithLogger
 
 type WatcherConfig struct {
 	ExcludePaths []string
@@ -35,7 +33,7 @@ type Watcher struct {
 	cmd          *exec.Cmd
 	lastCmdStart time.Time
 	log          func(msg string, args ...interface{})
-	skipper      domain.Skipper
+	skipper      Skipper
 	workDir      string
 }
 
@@ -53,7 +51,7 @@ func NewWatcher(config WatcherConfig) Watcher {
 		config: config,
 		// todo: make this injectable
 		workDir: workDir,
-		skipper: domain.NewSkipper(workDir, config.Exclude),
+		skipper: NewSkipper(workDir, config.Exclude),
 		log: func(msg string, args ...interface{}) {
 			if config.Verbose {
 				logger.Info(msg, args...)
@@ -63,8 +61,6 @@ func NewWatcher(config WatcherConfig) Watcher {
 }
 
 func (w Watcher) Start() {
-	// fmt.Println("WORKING DIRECTORY:", wd)
-
 	w.log("Command to run:", "cmd", w.config.Command)
 	w.log("Watched paths:", "paths", w.config.ExcludePaths)
 
@@ -77,10 +73,7 @@ func (w Watcher) Start() {
 	w.log("Adding watched paths:", "paths", w.config.ExcludePaths)
 	for _, pattern := range w.config.ExcludePaths {
 		expandedPath := filepath.Join(w.workDir, pattern)
-		// fmt.Println("EXPANDED PATH:", expandedPath)
-
 		rootDir, _ := doublestar.SplitPattern(expandedPath)
-		// fmt.Println("ROOT DIR:", rootDir)
 
 		if err := watcher.Add(rootDir); err != nil {
 			w.exit("Could not watch root directory:", "dir", rootDir, " error:", err)
@@ -169,11 +162,6 @@ func (w Watcher) Start() {
 				if w.cmd != nil && w.config.Kill {
 					w.kill()
 				}
-
-				// if event.Op&fsnotify.Create == fsnotify.Create || event.Op&fsnotify.Remove == fsnotify.Remove {
-				// 	watcher.Remove(event.Name) // Attempt to remove in case it's deleted
-				// 	addFiles()                 // Re-add files to catch any new/removed files
-				// }
 
 				w.runCmd()
 

@@ -8,11 +8,11 @@ test:
 
 .PHONY: test-e2e
 test-e2e:
-	@go test -v ./test/...
+	@gtc -v ./test/...
 
 .PHONY: test-unit
 test-unit:
-	@go test -v ./internal/...
+	@gtc -v ./internal/...
 
 .PHONY: watch-test
 watch-test:
@@ -32,8 +32,8 @@ watch-e2e-test:
 
 .PHONY: build
 build:
-	@CGO_ENABLED=0 go build -a -gcflags=all="-l -B" -ldflags="-s -w" -o bin/cng ./cmd/cng
-	@echo "🎉 cng built to bin/cng"
+	@CGO_ENABLED=0 go build -a -gcflags=all="-l -B" -ldflags="-s -w" -o dist/cng ./cmd/cng
+	@echo "🎉 cng built to dist/cng"
 
 .PHONY: install
 install:
