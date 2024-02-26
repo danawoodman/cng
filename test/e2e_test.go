@@ -192,7 +192,7 @@ func command(t *testing.T, stdout, stderr io.Writer, conf conf) *exec.Cmd {
 	}
 	parts = append(parts, conf.pattern)
 	parts = append(parts, "--", "echo", "hello")
-	cmd := exec.Command("cng", parts...)
+	cmd := exec.Command("./dist/cng", parts...)
 	// t.Log("CMD:", cmd.String())
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
