@@ -32,11 +32,13 @@ watch-e2e-test:
 
 .PHONY: build
 build:
-	@CGO_ENABLED=0 go build -a -gcflags=all="-l -B" -ldflags="-s -w" -o dist/cng ./cmd/cng
+	@echo "🤖 building cng..."
+	@CGO_ENABLED=0 go build -a -gcflags=all="-l -B" -ldflags="-s -w" -o ./dist/cng ./cmd/cng
 	@echo "🎉 cng built to dist/cng"
 
 .PHONY: install
 install:
+	@echo "🤖 installing cng..."
 	@go install ./cmd/cng
 	@echo "🎉 cng installed to: $(shell which cng)"
 

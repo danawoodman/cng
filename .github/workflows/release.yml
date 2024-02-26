@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,7 +22,9 @@ jobs:
           go-version-file: "go.mod"
 
       - name: Build for tests
-        run: make build
+        run: |
+          pwd
+          make build
 
       - name: Run tests
         run: make test
