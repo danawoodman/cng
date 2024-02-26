@@ -8,11 +8,11 @@ test:
 
 .PHONY: test-e2e
 test-e2e:
-	@go test -v ./test/...
+	@go test ./test/...
 
 .PHONY: test-unit
 test-unit:
-	@go test -v ./internal/...
+	@go test ./internal/...
 
 .PHONY: watch-test
 watch-test:

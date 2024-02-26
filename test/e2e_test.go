@@ -51,7 +51,6 @@ func TestCng(t *testing.T) {
 		{
 			name:    "ignores default excluded dirs",
 			pattern: "*.txt",
-			exclude: "*.md",
 			steps: func(write func(string)) {
 				write(".git/foo.txt")
 				write("node_modules/foo.txt")
@@ -119,7 +118,6 @@ func TestCng(t *testing.T) {
 			// Wait for the process to exit
 			if err := cmd.Wait(); err != nil {
 				exiterr, ok := err.(*exec.ExitError)
-				// assert.NoError(t, err)
 				assert.True(t, ok)
 				assert.NotNil(t, exiterr)
 
