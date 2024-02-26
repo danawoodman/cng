@@ -1,4 +1,4 @@
-# 🔭 cng - run commands on file change
+# 🔭 cng - run commands on file ChaNGes
 
 > Run commands on file change using glob patterns, heavily inspired by the excellent [onchange][onchange], but written in Go.
 

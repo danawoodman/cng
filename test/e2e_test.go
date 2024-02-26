@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"syscall"
 	"testing"
@@ -71,6 +72,10 @@ func TestCng(t *testing.T) {
 		// todo: ignore files in node_modules / ,git by default
 	}
 
+	curDir, err := os.Getwd()
+	assert.NoError(t, err)
+	binDir := path.Join(curDir, "..", "dist")
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// t.Parallel()
@@ -81,9 +86,6 @@ func TestCng(t *testing.T) {
 			dir := t.TempDir()
 			err := os.Chdir(dir)
 			assert.NoError(t, err)
-			// wd, err := os.Getwd()
-			// assert.NoError(t, err)
-			// fmt.Println("WORK DIR:", wd)
 
 			var stdoutBuf, stderrBuf bytes.Buffer
 			conf := conf{
@@ -95,7 +97,7 @@ func TestCng(t *testing.T) {
 				kill:    test.kill,
 				delay:   test.delay,
 			}
-			cmd := command(t, &stdoutBuf, &stderrBuf, conf)
+			cmd := command(t, binDir, &stdoutBuf, &stderrBuf, conf)
 			err = cmd.Start()
 			assert.NoError(t, err)
 
@@ -142,7 +144,7 @@ type conf struct {
 	delay                 int
 }
 
-func write(t *testing.T, dir, path, content string, waitMs int) /**os.File*/ {
+func write(t *testing.T, dir, path, content string, waitMs int) {
 	t.Helper()
 	var f *os.File
 
@@ -170,12 +172,10 @@ func write(t *testing.T, dir, path, content string, waitMs int) /**os.File*/ {
 	f.Close()
 
 	wait(waitMs)
-
-	// return f
 }
 
 // command returns a new exec.Cmd for running cng with the given configuration.
-func command(t *testing.T, stdout, stderr io.Writer, conf conf) *exec.Cmd {
+func command(t *testing.T, binDir string, stdout, stderr io.Writer, conf conf) *exec.Cmd {
 	// t.Helper()
 	parts := []string{}
 	if conf.init {
@@ -192,8 +192,7 @@ func command(t *testing.T, stdout, stderr io.Writer, conf conf) *exec.Cmd {
 	}
 	parts = append(parts, conf.pattern)
 	parts = append(parts, "--", "echo", "hello")
-	cmd := exec.Command("./dist/cng", parts...)
-	// t.Log("CMD:", cmd.String())
+	cmd := exec.Command(path.Join(binDir, "cng"), parts...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	return cmd
