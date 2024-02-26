@@ -80,7 +80,6 @@ func TestCng(t *testing.T) {
 			}
 
 			dir := t.TempDir()
-			// fmt.Println("TEMP DIR:", dir)
 			err := os.Chdir(dir)
 			assert.NoError(t, err)
 			// wd, err := os.Getwd()
@@ -97,14 +96,13 @@ func TestCng(t *testing.T) {
 				kill:    test.kill,
 				delay:   test.delay,
 			}
-			// t.Logf("CONF: %+v", conf)
 			cmd := command(t, &stdoutBuf, &stderrBuf, conf)
 			err = cmd.Start()
 			assert.NoError(t, err)
 
 			// wait for the process to start
 			// anything less than about 100ms and the process won't have time to start
-			time.Sleep(300 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 
 			if test.steps != nil {
 				test.steps(func(path string) {
@@ -112,7 +110,7 @@ func TestCng(t *testing.T) {
 				})
 			}
 
-			time.Sleep(300 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 
 			// Send SIGINT to the process
 			err = cmd.Process.Signal(os.Interrupt)
