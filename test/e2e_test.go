@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -72,9 +73,16 @@ func TestCng(t *testing.T) {
 		// todo: ignore files in node_modules / ,git by default
 	}
 
-	curDir, err := os.Getwd()
-	assert.NoError(t, err)
-	binDir := path.Join(curDir, "..", "dist")
+	curDir := os.Getenv("GITHUB_WORKSPACE")
+	fmt.Println("github dir", curDir)
+	if curDir == "" {
+		wd, err := os.Getwd()
+		assert.NoError(t, err)
+		curDir = path.Join(wd, "..")
+	}
+	fmt.Println("curDir", curDir)
+	binDir := path.Join(curDir, "dist")
+	fmt.Println("binDir", binDir)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -103,15 +111,15 @@ func TestCng(t *testing.T) {
 
 			// wait for the process to start
 			// anything less than about 100ms and the process won't have time to start
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(150 * time.Millisecond)
 
 			if test.steps != nil {
 				test.steps(func(path string) {
-					write(t, dir, path, "content", 500)
+					write(t, dir, path, "content", 50)
 				})
 			}
 
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 
 			// Send SIGINT to the process
 			err = cmd.Process.Signal(os.Interrupt)

@@ -22,13 +22,17 @@ jobs:
           go-version-file: "go.mod"
 
       - name: Build for tests
-        run: make install
+        run: make build
 
       - name: Run unit tests
         run: make test-unit
 
       - name: Run e2e tests
-        run: make test-e2e
+        run: |
+          pwd
+          ls -la
+          ls -la ..
+          make test-e2e
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
