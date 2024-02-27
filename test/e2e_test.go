@@ -68,7 +68,7 @@ func TestCng(t *testing.T) {
 				write(".git/foo.txt")
 				write("node_modules/foo.txt")
 			},
-			stdout: []string{""},
+			stdout: []string{},
 		},
 		// todo: should report helpful error if missing pattern
 		// {
@@ -149,13 +149,16 @@ func TestCng(t *testing.T) {
 			stdout := stdoutBuf.String()
 			stderr := stderrBuf.String()
 
-			var sep string
-			if runtime.GOOS == "windows" {
-				sep = "\r"
-			} else {
-				sep = "\n"
+			var testStdout string
+			if len(test.stdout) > 0 {
+				var sep string
+				if runtime.GOOS == "windows" {
+					sep = "\r"
+				} else {
+					sep = "\n"
+				}
+				testStdout = strings.Join(test.stdout, sep) + sep
 			}
-			testStdout := strings.Join(test.stdout, sep)
 			assert.Equal(t, testStdout, stdout)
 			assert.Equal(t, test.stderr, stderr)
 		})
