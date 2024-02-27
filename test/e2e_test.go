@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"testing"
 	"time"
@@ -206,7 +207,13 @@ func command(t *testing.T, binDir string, stdout, stderr io.Writer, conf conf) *
 	}
 	parts = append(parts, conf.pattern)
 	parts = append(parts, "--", "echo", "hello")
-	cmd := exec.Command(filepath.Join(binDir, "cng"), parts...)
+	var execName string
+	if runtime.GOOS == "windows" {
+		execName = "cng.exe"
+	} else {
+		execName = "cng"
+	}
+	cmd := exec.Command(filepath.Join(binDir, execName), parts...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	return cmd
