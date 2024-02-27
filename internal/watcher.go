@@ -135,6 +135,10 @@ func (w *Watcher) Start() {
 					w.log("CHMOD change detected, skipping")
 					continue
 				}
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					w.log("WRITE event detected, skipping")
+					continue
+				}
 
 				if time.Since(w.lastCmdStart) < time.Duration(w.config.Delay)*time.Millisecond {
 					w.log("Last command started less than the configured delay, skipping", "delay", w.config.Delay)
