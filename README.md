@@ -2,6 +2,11 @@
 
 > Run commands on file change using glob patterns, heavily inspired by the excellent [onchange][onchange], but written in Go.
 
+## Notes
+
+- This is a new, experimental project. I use it in multiple projects on a daily basis and it's working great for me. That said it hasn't been heavily tested, so please open an issue if you run into any problems.
+- I haven't tested this much outside of my personal system (macOS). Theoretically this should work on \*nix systems and even Windows, but I haven't yet tested it on them.
+
 ## Install
 
 Download a [release](https://github.com/danawoodman/cng/releases) for your platform and add it to your path.
@@ -24,7 +29,7 @@ cng -ik '**/*.go' 'templates/**/*.html' -- go run ./cmd/myapp
 # Run tests when your source or tests change:
 cng 'app/**/*.{ts,tsx}' '**/*.test.ts' -- npm test
 
-# Wait 500ms before running the command:
+# Wait 500ms before running the command again:
 cng -d 500 '*.md' -- echo "changed!"
 
 # Ignore/exclude some paths:
