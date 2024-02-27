@@ -2,7 +2,6 @@ package test
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -73,16 +72,14 @@ func TestCng(t *testing.T) {
 		// todo: ignore files in node_modules / ,git by default
 	}
 
+	// Get the directory to the build binary
 	curDir := os.Getenv("GITHUB_WORKSPACE")
-	fmt.Println("github dir", curDir)
 	if curDir == "" {
 		wd, err := os.Getwd()
 		assert.NoError(t, err)
 		curDir = path.Join(wd, "..")
 	}
-	fmt.Println("curDir", curDir)
 	binDir := path.Join(curDir, "dist")
-	fmt.Println("binDir", binDir)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
