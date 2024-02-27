@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -16,10 +17,11 @@ import (
 
 func TestCng(t *testing.T) {
 	tests := []struct {
-		name, stdout, stderr, exclude, pattern string
-		verbose, kill, init, skip              bool
-		delay                                  int
-		steps                                  func(write func(string))
+		name, stderr, exclude, pattern string
+		stdout                         []string
+		verbose, kill, init, skip      bool
+		delay                          int
+		steps                          func(write func(string))
 	}{
 		{
 			name:    "adds newly created files",
@@ -29,7 +31,7 @@ func TestCng(t *testing.T) {
 					write("*.txt")
 				}
 			},
-			stdout: "hello\nhello\nhello\n",
+			stdout: []string{"hello", "hello", "hello"},
 		},
 		{
 			name:    "called when a file changes",
@@ -39,12 +41,12 @@ func TestCng(t *testing.T) {
 					write("foo.txt")
 				}
 			},
-			stdout: "hello\nhello\nhello\n",
+			stdout: []string{"hello", "hello", "hello"},
 		},
 		{
 			name:    "init flag: should run on startup",
 			pattern: "*.txt",
-			stdout:  "hello\n",
+			stdout:  []string{"hello"},
 			init:    true,
 		},
 		{
@@ -57,7 +59,7 @@ func TestCng(t *testing.T) {
 				// should not be picked up by the watcher
 				write("*.md")
 			},
-			stdout: "hello\n",
+			stdout: []string{"hello"},
 		},
 		{
 			name:    "ignores default excluded dirs",
@@ -66,7 +68,7 @@ func TestCng(t *testing.T) {
 				write(".git/foo.txt")
 				write("node_modules/foo.txt")
 			},
-			stdout: "",
+			stdout: []string{""},
 		},
 		// todo: should report helpful error if missing pattern
 		// {
@@ -147,7 +149,14 @@ func TestCng(t *testing.T) {
 			stdout := stdoutBuf.String()
 			stderr := stderrBuf.String()
 
-			assert.Equal(t, test.stdout, stdout)
+			var sep string
+			if runtime.GOOS == "windows" {
+				sep = "\r"
+			} else {
+				sep = "\n"
+			}
+			testStdout := strings.Join(test.stdout, sep)
+			assert.Equal(t, testStdout, stdout)
 			assert.Equal(t, test.stderr, stderr)
 		})
 	}
