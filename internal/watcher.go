@@ -167,7 +167,7 @@ func (w *Watcher) Start() {
 			case <-sig:
 				w.log("Received SIGINT, exiting...")
 				w.killProcess()
-				os.Exit(1)
+				os.Exit(0)
 			}
 		}
 	}()

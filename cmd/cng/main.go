@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/danawoodman/cng/internal"
 	"github.com/spf13/cobra"
@@ -53,20 +54,17 @@ func main() {
 
 func execute(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
-		fmt.Println("No arguments provided")
-		fmt.Println("")
-		cmd.Help()
-		return
+		fail(cmd, "No arguments provided, please at least pass a pattern to watch and a command to run")
 	}
 
 	cmdIndex := indexOf("--", args)
+	if cmdIndex == -1 {
+		fail(cmd, "No '--' separator found between paths and command")
+	}
 	cmdToRun := args[cmdIndex+1:]
 
 	if len(cmdToRun) == 0 {
-		fmt.Println("ERROR: No command specified")
-		fmt.Println("")
-		cmd.Help()
-		return
+		fail(cmd, "No command specified, pass a command to run after the '--' separator")
 	}
 
 	watchedPaths := args[:cmdIndex]
@@ -80,6 +78,13 @@ func execute(cmd *cobra.Command, args []string) {
 		Exclude:      exclude,
 		Delay:        delay,
 	}).Start()
+}
+
+func fail(cmd *cobra.Command, msg string) {
+	fmt.Println(msg)
+	fmt.Println("")
+	cmd.Help()
+	os.Exit(1)
 }
 
 func indexOf(element string, data []string) int {

@@ -24,7 +24,7 @@ watch-unit-test:
 
 .PHONY: watch-e2e-test
 watch-e2e-test:
-	@cng -ik '**/*.go' -- make install test-e2e
+	@cng -ik '**/*.go' -- make build test-e2e
 
 #------------------------------------------------------------------------------
 # BUILDING
