@@ -5,7 +5,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"syscall"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -37,7 +36,7 @@ type Watcher struct {
 	workDir      string
 }
 
-func NewWatcher(config WatcherConfig) Watcher {
+func NewWatcher(config WatcherConfig) *Watcher {
 	if config.Verbose {
 		logger.Info("Starting watcher with config:", "config", config)
 	}
@@ -47,7 +46,7 @@ func NewWatcher(config WatcherConfig) Watcher {
 		panic("Could not get working directory: " + err.Error())
 	}
 
-	return Watcher{
+	return &Watcher{
 		config: config,
 		// todo: make this injectable
 		workDir: workDir,
@@ -60,7 +59,7 @@ func NewWatcher(config WatcherConfig) Watcher {
 	}
 }
 
-func (w Watcher) Start() {
+func (w *Watcher) Start() {
 	w.log("Command to run:", "cmd", w.config.Command)
 	w.log("Watched paths:", "paths", w.config.ExcludePaths)
 
@@ -115,7 +114,7 @@ func (w Watcher) Start() {
 	// Watch for a SIGINT signal and call .kill on the current command
 	// process if we receive one:
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
+	signal.Notify(sig, os.Interrupt, os.Kill)
 
 	w.log("Current watchlist:", "watchlist", watcher.WatchList())
 
@@ -160,15 +159,15 @@ func (w Watcher) Start() {
 				}
 
 				if w.cmd != nil && w.config.Kill {
-					w.kill()
+					w.killProcess()
 				}
 
 				w.runCmd()
 
 			case <-sig:
 				w.log("Received SIGINT, exiting...")
-				w.kill()
-				os.Exit(0)
+				w.killProcess()
+				os.Exit(1)
 			}
 		}
 	}()
@@ -176,10 +175,11 @@ func (w Watcher) Start() {
 	<-done
 }
 
-func (w Watcher) runCmd() {
+func (w *Watcher) runCmd() {
 	w.log("Running command...")
-	cmd := exec.Command(w.config.Command[0], w.config.Command[1:]...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	prog := w.config.Command[0]
+	args := w.config.Command[1:]
+	cmd := forkProcess(prog, args)
 
 	// Attach to current process so we can get color output:
 	cmd.Stdout = os.Stdout
@@ -193,31 +193,33 @@ func (w Watcher) runCmd() {
 	w.cmd = cmd
 }
 
-// kill kills the current command process.
+// killProcess kills the current command process.
 // It sends a SIGINT signal to the process group of cmd.
-// We cannot simply call cmd.Process.Kill() because it will not kill
+// We cannot simply call cmd.Process.Kill() because it will not killProcess
 // the child processes of cmd which, in the case of something like a
 // web server, would mean that we can't re-bind to the given port.
 // We then wait for the task to exit cleanly before continuing.
-func (w Watcher) kill() {
+func (w *Watcher) killProcess() {
 	if w.cmd == nil {
+		w.log("No command to kill")
 		return
 	}
-	pgid, err := syscall.Getpgid(w.cmd.Process.Pid)
-	if err == nil {
-		syscall.Kill(-pgid, syscall.SIGINT)
+
+	err := killProcess(w.cmd.Process)
+	if err != nil {
+		w.log("Error killing process", "error", err)
 	}
-	w.log("Killing current command process:", "cmd", pgid)
+
 	w.cmd.Wait()
 }
 
 // exit logs a fatal message and exits the program because of
 // some invalid condition.
-func (w Watcher) exit(msg string, args ...interface{}) {
+func (w *Watcher) exit(msg string, args ...interface{}) {
 	logger.Fatal(msg, args...)
 }
 
-func (w Watcher) addFiles(watcher *fsnotify.Watcher, rootPath string) {
+func (w *Watcher) addFiles(watcher *fsnotify.Watcher, rootPath string) {
 	w.log("Adding files in directory to watcher", "path", rootPath)
 	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
