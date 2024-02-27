@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"syscall"
 	"testing"
@@ -87,9 +86,9 @@ func TestCng(t *testing.T) {
 	if curDir == "" {
 		wd, err := os.Getwd()
 		assert.NoError(t, err)
-		curDir = path.Join(wd, "..")
+		curDir = filepath.Join(wd, "..")
 	}
-	binDir := path.Join(curDir, "dist")
+	binDir := filepath.Join(curDir, "dist")
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -207,7 +206,7 @@ func command(t *testing.T, binDir string, stdout, stderr io.Writer, conf conf) *
 	}
 	parts = append(parts, conf.pattern)
 	parts = append(parts, "--", "echo", "hello")
-	cmd := exec.Command(path.Join(binDir, "cng"), parts...)
+	cmd := exec.Command(filepath.Join(binDir, "cng"), parts...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	return cmd
