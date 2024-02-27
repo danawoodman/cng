@@ -32,6 +32,16 @@ func TestCng(t *testing.T) {
 			stdout: "hello\nhello\nhello\n",
 		},
 		{
+			name:    "called when a file changes",
+			pattern: "*.txt",
+			steps: func(write func(string)) {
+				for range 3 {
+					write("foo.txt")
+				}
+			},
+			stdout: "hello\nhello\nhello\n",
+		},
+		{
 			name:    "init flag: should run on startup",
 			pattern: "*.txt",
 			stdout:  "hello\n",
